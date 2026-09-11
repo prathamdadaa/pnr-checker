@@ -1,0 +1,21 @@
+{
+  "success": true,
+  "data": {
+    "pnr": "1234567890",
+    "train_number": "12302",
+    "train_name": "Howrah Rajdhani Express",
+    "doj": "2026-10-15",
+    "class": "3A",
+    "chart_status": "Chart Not Prepared",
+    "from_station": { "code": "NDLS", "name": "New Delhi" },
+    "to_station": { "code": "HWH", "name": "Howrah Junction" },
+    "passengers": [
+      {
+        "passenger_no": 1,
+        "booking_status": "WL 12",
+        "current_status": "CNF",
+        "berth": "B3-42 (Side Upper)"
+      }
+    ]
+  }
+}
