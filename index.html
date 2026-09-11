@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RailPNR - Realtime PNR Status Checker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 650px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+
+        .logo span {
+            color: #3b82f6;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* Card General */
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+        }
+
+        /* Search Box */
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: #3b82f6;
+        }
+
+        button {
+            background-color: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 8px;
+            min-height: 18px;
+        }
+
+        /* Result Card */
+        .train-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 12px;
+        }
+
+        .train-title h2 {
+            font-size: 20px;
+            color: #111827;
+        }
+
+        .train-num {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .route-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .st-code {
+            display: block;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .st-name {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .route-arrow {
+            color: #9ca3af;
+            font-size: 20px;
+        }
+
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            background-color: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .badge {
+            background: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* Passenger Table */
+        .passengers-card h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        th {
+            background-color: #f9fafb;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        /* Status styling */
+        .status-cnf {
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .status-rac {
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .status-wl {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid white;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">🚆 Rail<span>PNR</span></div>
+            <p>Check Indian Railways PNR Status Instantly</p>
+        </header>
+
+        <!-- Search Card -->
+        <div class="card search-card">
+            <form id="pnrForm">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="pnrInput" 
+                        placeholder="Enter 10-Digit PNR Number" 
+                        maxlength="10" 
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit" id="searchBtn">
+                        <span id="btnText">Check Status</span>
+                        <div class="spinner" id="btnSpinner" style="display: none;"></div>
+                    </button>
+                </div>
+                <p class="error-msg" id="errorMsg"></p>
+            </form>
+        </div>
+
+        <!-- Result Section -->
+        <div class="result-container" id="resultContainer" style="display: none;">
+            
+            <!-- Train Details Header -->
+            <div class="card train-details-card">
+                <div class="train-title">
+                    <h2 id="trainName">Howrah Rajdhani Express</h2>
+                    <span class="train-num" id="trainNum">#12302</span>
+                </div>
+
+                <div class="route-info">
+                    <div class="station">
+                        <span class="st-code" id="fromCode">NDLS</span>
+                        <span class="st-name" id="fromName">New Delhi</span>
+                    </div>
+                    <div class="route-arrow">➔</div>
+                    <div class="station">
+                        <span class="st-code" id="toCode">HWH</span>
+                        <span class="st-name" id="toName">Howrah Jn</span>
+                    </div>
+                </div>
+
+                <div class="meta-info">
+                    <div><strong>Date of Journey:</strong> <span id="doj">-</span></div>
+                    <div><strong>Class:</strong> <span id="journeyClass">-</span></div>
+                    <div><strong>Chart Status:</strong> <span class="badge" id="chartStatus">-</span></div>
+                </div>
+            </div>
+
+            <!-- Passengers Status Table -->
+            <div class="card passengers-card">
+                <h3>Passenger Status Details</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Passenger</th>
+                                <th>Booking Status</th>
+                                <th>Current Status</th>
+                                <th>Berth / Seat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="passengerTableBody">
+                            <!-- Injected by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('pnrForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const pnrInput = document.getElementById('pnrInput');
+            const errorMsg = document.getElementById('errorMsg');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const resultContainer = document.getElementById('resultContainer');
+
+            const pnr = pnrInput.value.trim();
+
+            // Reset error message
+            errorMsg.textContent = '';
+
+            // Validation (10 digits check)
+            if (pnr.length !== 10 || isNaN(pnr)) {
+                errorMsg.textContent = 'Please enter a valid 10-digit numeric PNR number.';
+                return;
+            }
+
+            // Show loading state
+            btnText.textContent = 'Searching...';
+            btnSpinner.style.display = 'block';
+
+            // Simulate Network API Call with Mock Data
+            setTimeout(() => {
+                const mockResponse = getMockPNRData(pnr);
+                renderPNRDetails(mockResponse);
+
+                // Hide spinner & show result
+                btnText.textContent = 'Check Status';
+                btnSpinner.style.display = 'none';
+                resultContainer.style.display = 'block';
+            }, 1000);
+        });
+
+        // Function to generate Mock PNR Data
+        function getMockPNRData(pnr) {
+            return {
+                pnr: pnr,
+                train_number: "12302",
+                train_name: "Howrah Rajdhani Express",
+                doj: "15 Oct 2026",
+                class: "3A",
+                chart_status: "Chart Not Prepared",
+                from_station: { code: "NDLS", name: "New Delhi" },
+                to_station: { code: "HWH", name: "Howrah Junction" },
+                passengers: [
+                    {
+                        passenger_no: 1,
+                        booking_status: "WL 12",
+                        current_status: "CNF",
+                        berth: "B3-42 (Side Upper)"
+                    },
+                    {
+                        passenger_no: 2,
+                        booking_status: "WL 13",
+                        current_status: "CNF",
+                        berth: "B3-43 (Lower)"
+                    }
+                ]
+            };
+        }
+
+        // Render Data into DOM
+        function renderPNRDetails(data) {
+            document.getElementById('trainName').textContent = data.train_name;
+            document.getElementById('trainNum').textContent = `#${data.train_number}`;
+            document.getElementById('fromCode').textContent = data.from_station.code;
+            document.getElementById('fromName').textContent = data.from_station.name;
+            document.getElementById('toCode').textContent = data.to_station.code;
+            document.getElementById('toName').textContent = data.to_station.name;
+            document.getElementById('doj').textContent = data.doj;
+            document.getElementById('journeyClass').textContent = data.class;
+            document.getElementById('chartStatus').textContent = data.chart_status;
+
+            const tbody = document.getElementById('passengerTableBody');
+            tbody.innerHTML = '';
+
+            data.passengers.forEach(p => {
+                let statusClass = 'status-wl';
+                if (p.current_status.includes('CNF')) statusClass = 'status-cnf';
+                else if (p.current_status.includes('RAC')) statusClass = 'status-rac';
+
+                const row = `
+                    <tr>
+                        <td>Passenger ${p.passenger_no}</td>
+                        <td>${p.booking_status}</td>
+                        <td class="${statusClass}">${p.current_status}</td>
+                        <td>${p.berth}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+    </script>
+</body>
+</html>
