@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RailPNR - Realtime PNR Status Checker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">🚆 Rail<span>PNR</span></div>
+            <p>Check Indian Railways PNR Status Instantly</p>
+        </header>
+
+        <!-- Search Card -->
+        <div class="card search-card">
+            <form id="pnrForm">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="pnrInput" 
+                        placeholder="Enter 10-Digit PNR Number" 
+                        maxlength="10" 
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit" id="searchBtn">
+                        <span id="btnText">Check Status</span>
+                        <div class="spinner" id="btnSpinner" hidden></div>
+                    </button>
+                </div>
+                <p class="error-msg" id="errorMsg"></p>
+            </form>
+        </div>
+
+        <!-- Result Section -->
+        <div class="result-container" id="resultContainer" hidden>
+            
+            <!-- Train Details Header -->
+            <div class="card train-details-card">
+                <div class="train-title">
+                    <h2 id="trainName">Howrah Rajdhani Express</h2>
+                    <span class="train-num" id="trainNum">#12302</span>
+                </div>
+
+                <div class="route-info">
+                    <div class="station">
+                        <span class="st-code" id="fromCode">NDLS</span>
+                        <span class="st-name" id="fromName">New Delhi</span>
+                    </div>
+                    <div class="route-arrow">➔</div>
+                    <div class="station">
+                        <span class="st-code" id="toCode">HWH</span>
+                        <span class="st-name" id="toName">Howrah Jn</span>
+                    </div>
+                </div>
+
+                <div class="meta-info">
+                    <div><strong>Date of Journey:</strong> <span id="doj">-</span></div>
+                    <div><strong>Class:</strong> <span id="journeyClass">-</span></div>
+                    <div><strong>Chart Status:</strong> <span class="badge" id="chartStatus">-</span></div>
+                </div>
+            </div>
+
+            <!-- Passengers Status Table -->
+            <div class="card passengers-card">
+                <h3>Passenger Status Details</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Passenger</th>
+                                <th>Booking Status</th>
+                                <th>Current Status</th>
+                                <th>Berth / Seat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="passengerTableBody">
+                            <!-- Injected by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
